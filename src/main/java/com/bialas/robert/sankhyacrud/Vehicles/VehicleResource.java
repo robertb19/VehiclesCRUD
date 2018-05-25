@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 public class VehicleResource {
@@ -34,7 +35,72 @@ public class VehicleResource {
         }
 
         else throw new IOException("id-" + id);
+    }
 
+    @GetMapping("/vehicles/{filter}/{from}/{to}")
+    public List<Vehicle> retrieveVehiclesSortedByMileage(@PathVariable double from, @PathVariable double to, @PathVariable String filter){
+        List<Vehicle> vehicleList = vehicleRepository.findAll();
+        List<Vehicle> resultsList = new ArrayList<Vehicle>();
+
+        if(filter.equals("mileage")) {
+            resultsList = vehicleList.stream().filter((a) -> {
+                if (a.getMileage() > from && a.getMileage() < to) return true;
+                else return false;
+            }).collect(Collectors.toList());
+        }
+
+        if(filter.equals("motor")) {
+            resultsList = vehicleList.stream().filter((a) -> {
+                if (a.getMotor() > from && a.getMotor() < to) return true;
+                else return false;
+            }).collect(Collectors.toList()); // This will be cleaned up... to much repeated code
+        }
+
+        return resultsList;
+    }
+
+    @GetMapping ("/vehicles/{filter}/{letter}")
+    public List<Vehicle> retrieveNameFilteredVehicles(@PathVariable String filter, @PathVariable String letter){
+      List<Vehicle> vehicleList = vehicleRepository.findAll();
+      List<Vehicle> resultsList;
+
+      if(filter.equals("make")){
+          return vehicleList.stream().filter(a -> {
+              if(a.getMake().substring(0,1).equals(letter)) return true;
+              else return false;}).collect(Collectors.toList());
+      }
+
+      if(filter.equals("model")){
+            return vehicleList.stream().filter(a -> {
+                if(a.getModel().substring(0,1).equals(letter)) return true;
+                else return false;}).collect(Collectors.toList());
+        }
+
+      else return null;
+    }
+
+    @GetMapping("/vehicles/{filter}/{from}/{to}/{filter2}/{from2}/{to2}")
+        public List<Vehicle> retrieveVehiclesSortedByTwoParams(@PathVariable double from, @PathVariable double to, @PathVariable String filter, @PathVariable double from2, @PathVariable double to2, @PathVariable  String filter2){
+        List<Vehicle> vehicleList = vehicleRepository.findAll();
+        List<Vehicle> resultsList;
+
+        resultsList = retrieveVehiclesSortedByMileage(from, to, filter);
+
+        if(filter2.equals("mileage")) {
+            resultsList = vehicleList.stream().filter((a) -> {
+                if (a.getMileage() > from2 && a.getMileage() < to2) return true;
+                else return false;
+            }).collect(Collectors.toList());
+        }
+
+        if(filter2.equals("motor")) {
+            resultsList = vehicleList.stream().filter((a) -> {
+                if (a.getMotor() > from2 && a.getMotor() < to2) return true;
+                else return false;
+            }).collect(Collectors.toList()); //Also here, too much repeated code
+        }
+
+        return resultsList;
     }
 
     @DeleteMapping("/vehicles/{id}")
